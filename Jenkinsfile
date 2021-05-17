@@ -27,7 +27,7 @@ pipeline {
         stage('TerraformFormat'){
             steps {
                 dir('./'){
-                    sh "terraform fmt -list=true -write=true -diff=true -check=true"
+                    sh "terraform fmt -list=true -write=false -diff=true -check=true"
                 }
             }
         }
