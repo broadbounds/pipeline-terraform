@@ -1,22 +1,22 @@
 pipeline {
-
+    agent any
+    tools {
+        "org.jenkinsci.plugins.terraform.TerraformInstallation" "terraform-0.11.8"
+    }
     parameters {
-        string(name: 'environment', defaultValue: 'terraform', description: 'Workspace/environment file to use for deployment')
-        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
-
+        string(name: 'WORKSPACE', defaultValue: 'development', description:'setting up workspace for terraform')
     }
-
-
-     environment {
-        AWS_ACCESS_KEY_ID     = credentials('AWS_Access_Key_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_Secret_Access_Key')
+    environment {
+        TF_HOME = tool('terraform-0.11.8')
+        TF_IN_AUTOMATION = "true"
+        PATH = "$TF_HOME:$PATH"
+        ACCESS_KEY = credentials('AWS_Access_Key_ID')
+        SECRET_KEY = credentials('AWS_Secret_Access_Key')
     }
-
-   agent  any
     stages {
             stage('TerraformInit'){
             steps {
-                dir('./'){
+                dir('terraform/'){
                     sh "terraform init -input=false"
                     sh "echo \$PWD"
                     sh "whoami"
@@ -26,7 +26,7 @@ pipeline {
 
         stage('TerraformFormat'){
             steps {
-                dir('./'){
+                dir('terraform/'){
                     sh "terraform fmt -list=true -write=false -diff=true -check=true"
                 }
             }
@@ -34,40 +34,46 @@ pipeline {
 
         stage('TerraformValidate'){
             steps {
-                dir('./'){
+                dir('terraform/'){
                     sh "terraform validate"
                 }
             }
         }
 
-        stage('Plan') {
+        stage('TerraformPlan'){
             steps {
-                sh 'terraform init -input=false'
-                sh 'terraform workspace new ${environment}'
-                sh 'terraform workspace select ${environment}'
-                sh "terraform plan -input=false -out tfplan "
-                sh 'terraform show -no-color tfplan > tfplan.txt'
+                dir('terraform/'){
+                    script {
+                        try {
+                            sh "terraform workspace new ${params.WORKSPACE}"
+                        } catch (err) {
+                            sh "terraform workspace select ${params.WORKSPACE}"
+                        }
+                        sh "terraform plan -var 'access_key=$ACCESS_KEY' -var 'secret_key=$SECRET_KEY' \
+                        -out terraform.tfplan;echo \$? > status"
+                        stash name: "terraform-plan", includes: "terraform.tfplan"
+                    }
+                }
             }
         }
-        stage('Approval') {
-           when {
-               not {
-                   equals expected: true, actual: params.autoApprove
-               }
-           }
-
-           steps {
-               script {
-                    def plan = readFile 'terraform/tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-               }
-           }
-       }
-
-        stage('Apply') {
+        stage('TerraformApply'){
             steps {
-                sh "pwd;cd terraform ; terraform apply -input=false tfplan"
+                script{
+                    def apply = false
+                    try {
+                        input message: 'Can you please confirm the apply', ok: 'Ready to Apply the Config'
+                        apply = true
+                    } catch (err) {
+                        apply = false
+                         currentBuild.result = 'UNSTABLE'
+                    }
+                    if(apply){
+                        dir('terraform/'){
+                            unstash "terraform-plan"
+                            sh 'terraform apply terraform.tfplan'
+                        }
+                    }
+                }
             }
         }
     }
