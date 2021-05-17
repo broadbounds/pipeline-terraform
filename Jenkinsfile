@@ -14,24 +14,39 @@ pipeline {
 
    agent  any
     stages {
-        stage('checkout') {
+            stage('TerraformInit'){
             steps {
-                 script{
-                        dir("terraform")
-                        {
-                            git "https://github.com/broadbounds/terraform.git"
-                        }
-                    }
+                dir('./'){
+                    sh "terraform init -input=false"
+                    sh "echo \$PWD"
+                    sh "whoami"
                 }
             }
+        }
+
+        stage('TerraformFormat'){
+            steps {
+                dir('./'){
+                    sh "terraform fmt -list=true -write=false -diff=true -check=true"
+                }
+            }
+        }
+
+        stage('TerraformValidate'){
+            steps {
+                dir('./'){
+                    sh "terraform validate"
+                }
+            }
+        }
 
         stage('Plan') {
             steps {
-                sh 'pwd;cd terraform ; terraform init -input=false'
-                sh 'pwd;cd terraform ; terraform workspace new ${environment}'
-                sh 'pwd;cd terraform ; terraform workspace select ${environment}'
-                sh "pwd;cd terraform ;terraform plan -input=false -out tfplan "
-                sh 'pwd;cd terraform ;terraform show -no-color tfplan > tfplan.txt'
+                sh 'terraform init -input=false'
+                sh 'terraform workspace new ${environment}'
+                sh 'terraform workspace select ${environment}'
+                sh "terraform plan -input=false -out tfplan "
+                sh 'terraform show -no-color tfplan > tfplan.txt'
             }
         }
         stage('Approval') {
