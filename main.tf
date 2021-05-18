@@ -138,7 +138,7 @@ resource "aws_instance" "bastion_host" {
    depends_on = [
       aws_security_group.sg_bastion_host,
    ]
-   ami           = "ami-077e31c4939f6a2f3"
+   ami = "ami-077e31c4939f6a2f3"
    instance_type = "t2.micro"
    key_name = var.key.name
    vpc_security_group_ids = [aws_security_group.sg_bastion_host.id]
