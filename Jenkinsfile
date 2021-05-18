@@ -11,8 +11,6 @@ pipeline {
     SECRET_KEY = credentials('AWS_SECRET_ACCESS_KEY')
   }
 
-  stages 
-  {
     stage('TerraformInit'){
         steps {
             sh "terraform init -input=false"
@@ -50,5 +48,4 @@ pipeline {
             cleanWs()
         }
       }
-}
 }
