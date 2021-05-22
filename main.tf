@@ -54,7 +54,7 @@ resource "aws_internet_gateway" "internet_gateway" {
    ]
 }
 
-# We create a route table with target as our internet gateway
+# We create a route table with target as our internet gateway and destination as "internet"
 # Set of rules used to determine where network traffic is directed
 resource "aws_route_table" "IG_route_table" {
    depends_on = [
@@ -83,7 +83,7 @@ resource "aws_route_table_association" "associate_routetable_to_public_subnet" {
 }
 
 # We create an elastic IP 
-#  A public IP address that we can assign to any EC2 instance
+#  A static public IP address that we can assign to any EC2 instance
 resource "aws_eip" "elastic_ip" {
    vpc = true
 }
@@ -103,7 +103,7 @@ resource "aws_nat_gateway" "nat_gateway" {
    ]
 }
 
-# We create a route table with target as NAT gateway
+# We create a route table with target as NAT gateway and destination as "internet"
 # Set of rules used to determine where network traffic is directed
 resource "aws_route_table" "NAT_route_table" {
    depends_on = [
@@ -121,7 +121,7 @@ resource "aws_route_table" "NAT_route_table" {
 }
 
 # We associate our route table to the private subnet
-# Keepss the subnet private because it has a route to the internet via our NAT gateway 
+# Keeps the subnet private because it has a route to the internet via our NAT gateway 
 resource "aws_route_table_association" "associate_routetable_to_private_subnet" {
    depends_on = [
       aws_subnet.private_subnet,
@@ -132,7 +132,7 @@ resource "aws_route_table_association" "associate_routetable_to_private_subnet" 
 }
 
 # We create a security group for SSH traffic
-# EC2 instances firewall that control incoming and outgoing traffic
+# EC2 instances' firewall that controls incoming and outgoing traffic
 resource "aws_security_group" "sg_bastion_host" {
    depends_on = [
       aws_vpc.vpc,
@@ -153,6 +153,12 @@ resource "aws_security_group" "sg_bastion_host" {
       protocol = "-1"
       cidr_blocks = ["0.0.0.0/0"]
    }
+}
+
+# We create an elastic IP 
+# A static public IP address that we can assign to any EC2 instance
+resource "aws_eip" "elastic_ip" {
+   vpc = true
 }
 
 # We create a bastion host
