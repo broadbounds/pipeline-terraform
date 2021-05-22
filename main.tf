@@ -1,9 +1,11 @@
+# We set AWS as the cloud platform to use
 provider "aws" {
    region  = "us-east-2"
    access_key = var.access_key
    secret_key = var.secret_key
  }
 
+# We create a new VPC
 resource "aws_vpc" "vpc" {
    cidr_block = "192.168.0.0/16"
    instance_tenancy = "default"
@@ -13,6 +15,7 @@ resource "aws_vpc" "vpc" {
    enable_dns_hostnames = true
 }
 
+# We create a public subnet
 resource "aws_subnet" "public_subnet" {
    depends_on = [
       aws_vpc.vpc,
@@ -26,6 +29,7 @@ resource "aws_subnet" "public_subnet" {
    map_public_ip_on_launch = true
 }
 
+# We create a private subnet
 resource "aws_subnet" "private_subnet" {
    depends_on = [
       aws_vpc.vpc,
@@ -38,6 +42,8 @@ resource "aws_subnet" "private_subnet" {
    ]
 }
 
+# We create an internet gateway
+# Allows communication between our VPC and the internet
 resource "aws_internet_gateway" "internet_gateway" {
    depends_on = [
       aws_vpc.vpc,
@@ -48,6 +54,8 @@ resource "aws_internet_gateway" "internet_gateway" {
    ]
 }
 
+# We create a route table with target as our internet gateway
+# Set of rules used to determine where network traffic is directed
 resource "aws_route_table" "IG_route_table" {
    depends_on = [
       aws_vpc.vpc,
@@ -63,6 +71,8 @@ resource "aws_route_table" "IG_route_table" {
    ]
 }
 
+# We associate our route table to the public subnet
+# Makes the subnet public because it has a route to the internet via our internet gateway
 resource "aws_route_table_association" "associate_routetable_to_public_subnet" {
    depends_on = [
       aws_subnet.public_subnet,
@@ -72,10 +82,15 @@ resource "aws_route_table_association" "associate_routetable_to_public_subnet" {
    route_table_id = aws_route_table.IG_route_table.id
 }
 
+# We create an elastic IP 
+#  A public IP address that we can assign to any EC2 instance
 resource "aws_eip" "elastic_ip" {
    vpc = true
 }
 
+# We create a NAT gateway with a required public IP
+# Lives in a public subnet and prevents externally initiated traffic to our private subnet
+# Allows initiated outbound traffic to the Internet or other AWS services
 resource "aws_nat_gateway" "nat_gateway" {
    depends_on = [
       aws_subnet.public_subnet,
@@ -88,6 +103,8 @@ resource "aws_nat_gateway" "nat_gateway" {
    ]
 }
 
+# We create a route table with target as NAT gateway
+# Set of rules used to determine where network traffic is directed
 resource "aws_route_table" "NAT_route_table" {
    depends_on = [
       aws_vpc.vpc,
@@ -103,6 +120,8 @@ resource "aws_route_table" "NAT_route_table" {
    ]
 }
 
+# We associate our route table to the private subnet
+# Keepss the subnet private because it has a route to the internet via our NAT gateway 
 resource "aws_route_table_association" "associate_routetable_to_private_subnet" {
    depends_on = [
       aws_subnet.private_subnet,
@@ -112,6 +131,8 @@ resource "aws_route_table_association" "associate_routetable_to_private_subnet" 
    route_table_id = aws_route_table.NAT_route_table.id
 }
 
+# We create a security group for SSH traffic
+# EC2 instances firewall that control incoming and outgoing traffic
 resource "aws_security_group" "sg_bastion_host" {
    depends_on = [
       aws_vpc.vpc,
@@ -134,6 +155,8 @@ resource "aws_security_group" "sg_bastion_host" {
    }
 }
 
+# We create a bastion host
+# Allows SSH into instances in private subnet
 resource "aws_instance" "bastion_host" {
    depends_on = [
       aws_security_group.sg_bastion_host,
