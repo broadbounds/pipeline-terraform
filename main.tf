@@ -16,6 +16,8 @@ resource "aws_vpc" "vpc" {
 }
 
 # We create a public subnet
+# The key differentiator between a private and public subnet is the map_public_ip_on_launch flag
+# if this is True, instances launched in this subnet will have a public IP address and be accessible via the internet gateway
 resource "aws_subnet" "public_subnet" {
    depends_on = [
       aws_vpc.vpc,
@@ -169,7 +171,7 @@ resource "tls_private_key" "ssh_key" {
 }
 
 # We upload the public key of our created ssh key to AWS
-resource "aws_key_pair" "ssh_key_pair" {
+resource "aws_key_pair" "public_ssh_key" {
   key_name   = var.key_name
   public_key = tls_private_key.ssh_key.public_key_openssh
 
@@ -192,10 +194,17 @@ resource "aws_instance" "bastion_host" {
    ]
    ami = "ami-077e31c4939f6a2f3"
    instance_type = "t2.micro"
-   key_name = var.key.name
+   key_name = aws_key_pair.public_ssh_key.key_name
    vpc_security_group_ids = [aws_security_group.sg_bastion_host.id]
    subnet_id = aws_subnet.public_subnet.id
+   associate_public_ip_address = true
    tags = {
       Name = "bastion host"
    }
+}
+
+# We associate the elastic ip to our bastion host
+resource "aws_eip_association" "bastion_eip_association" {
+  instance_id   = aws_instance.bastion_host.id
+  allocation_id = aws_eip.bastion_elastic_ip.id
 }
