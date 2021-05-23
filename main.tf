@@ -161,6 +161,29 @@ resource "aws_eip" "elastic_ip" {
    vpc = true
 }
 
+# We create an ssh key using the RSA algorithm with 4096 rsa bits
+# The ssh key always includes the public and the private key
+resource "tls_private_key" "ssh_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+# We upload the public key of our created ssh key to AWS
+resource "aws_key_pair" "ssh_key_pair" {
+  key_name   = var.key_name
+  public_key = tls_private_key.ssh_key.public_key_openssh
+
+   depends_on = [tls_private_key.ssh_key]
+}
+
+# We save our private key at our specified path.
+# Allows private key instead of a password to securely access our instances
+resource "local_file" "saveKey" {
+  content = tls_private_key.ssh_key.private_key_pem
+  filename = "${var.key_path}${var.key_name}.pem"
+  
+}
+
 # We create a bastion host
 # Allows SSH into instances in private subnet
 resource "aws_instance" "bastion_host" {
