@@ -157,7 +157,7 @@ resource "aws_security_group" "sg_bastion_host" {
 
 # We create an elastic IP 
 # A static public IP address that we can assign to our bastion host
-resource "aws_eip" "elastic_ip" {
+resource "aws_eip" "bastion_elastic_ip" {
    vpc = true
 }
 
