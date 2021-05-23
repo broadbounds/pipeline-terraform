@@ -85,7 +85,7 @@ resource "aws_route_table_association" "associate_routetable_to_public_subnet" {
 }
 
 # We create an elastic IP 
-#  A static public IP address that we can assign to any EC2 instance
+# A static public IP address that we can assign to any EC2 instance
 resource "aws_eip" "elastic_ip" {
    vpc = true
 }
