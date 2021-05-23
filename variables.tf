@@ -10,10 +10,10 @@ variable "secret_key" {
 
 variable "key_name" {
   type        = string
-  default     = ""
+  default     = "ssh_private_key"
 }
 
 variable "key_path" {
   type        = string
-  default     = ""
+  default     = "~/.ssh/"
 }
