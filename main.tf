@@ -16,8 +16,7 @@ resource "aws_vpc" "vpc" {
 }
 
 # We create a public subnet
-# The key differentiator between a private and public subnet is the map_public_ip_on_launch flag
-# if this is True, instances launched in this subnet will have a public IP address and be accessible via the internet gateway
+# Instances will have a dynamic public IP and be accessible via the internet gateway
 resource "aws_subnet" "public_subnet" {
    depends_on = [
       aws_vpc.vpc,
@@ -32,6 +31,7 @@ resource "aws_subnet" "public_subnet" {
 }
 
 # We create a private subnet
+# Instances will not be accessible via the internet gateway
 resource "aws_subnet" "private_subnet" {
    depends_on = [
       aws_vpc.vpc,
