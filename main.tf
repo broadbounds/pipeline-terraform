@@ -197,10 +197,20 @@ resource "aws_instance" "bastion_host" {
    key_name = aws_key_pair.public_ssh_key.key_name
    vpc_security_group_ids = [aws_security_group.sg_bastion_host.id]
    subnet_id = aws_subnet.public_subnet.id
-   associate_public_ip_address = true
    tags = {
       Name = "bastion host"
    }
+   provisioner "file" {
+    source      = "${var.key_path}${var.key_name}.pem"
+    destination = "/home/ec2-user/ec2Key.pem"
+
+    connection {
+    type     = "ssh"
+    user     = "ec2-user"
+    private_key = tls_private_key.ssh_key.private_key_pem
+    host     = aws_instance.bastion_host.public_ip
+    }
+  }
 }
 
 # We associate the elastic ip to our bastion host
