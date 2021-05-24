@@ -24,9 +24,9 @@ resource "aws_subnet" "public_subnet" {
    vpc_id = aws_vpc.vpc.id
    cidr_block = "192.168.0.0/24"
    availability_zone_id = "us-east-2a"
-   tags = [
+   tags = {
       Name = "public-subnet"
-   ]
+   }
    map_public_ip_on_launch = true
 }
 
@@ -39,9 +39,9 @@ resource "aws_subnet" "private_subnet" {
    vpc_id = aws_vpc.vpc.id
    cidr_block = "192.168.1.0/24"
    availability_zone_id = "us-east-2a"
-   tags = [
+   tags = {
       Name = "private-subnet"
-   ]
+   }
 }
 
 # We create an internet gateway
@@ -51,9 +51,9 @@ resource "aws_internet_gateway" "internet_gateway" {
       aws_vpc.vpc,
    ]
    vpc_id = aws_vpc.vpc.id
-   tags = [
-      Name = "internet-gateway"
-   ]
+   tags = {
+      Name = "internet-gateway",
+   }
 }
 
 # We create a route table with target as our internet gateway and destination as "internet"
@@ -68,9 +68,9 @@ resource "aws_route_table" "IG_route_table" {
       cidr_block = "0.0.0.0/0"
       gateway_id = aws_internet_gateway.internet_gateway.id
    }
-   tags = [
+   tags = {
       Name = "IG-route-table"
-   ]
+   }
 }
 
 # We associate our route table to the public subnet
@@ -100,9 +100,9 @@ resource "aws_nat_gateway" "nat_gateway" {
    ]
    allocation_id = aws_eip.elastic_ip.id
    subnet_id = aws_subnet.public_subnet.id
-   tags = [
+   tags = {
       Name = "nat-gateway"
-   ]
+   }
 }
 
 # We create a route table with target as NAT gateway and destination as "internet"
@@ -117,9 +117,9 @@ resource "aws_route_table" "NAT_route_table" {
       cidr_block = "0.0.0.0/0"
       gateway_id = aws_nat_gateway.nat_gateway.id
    }
-   tags = [
+   tags = {
       Name = "NAT-route-table"
-   ]
+   }
 }
 
 # We associate our route table to the private subnet
