@@ -39,7 +39,7 @@ pipeline {
         steps {
             script{                    
                 unstash "terraform-plan"
-                sh 'terraform apply terraform.tfplan'
+                sh "terraform destroy -auto-approve -var 'access_key=$ACCESS_KEY' -var 'secret_key=$SECRET_KEY' "
             }
         }
     }
