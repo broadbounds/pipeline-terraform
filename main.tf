@@ -23,7 +23,7 @@ resource "aws_subnet" "public_subnet" {
    ]
    vpc_id = aws_vpc.vpc.id
    cidr_block = "192.168.0.0/24"
-   availability_zone_id = "us-east-2a"
+   availability_zone_id = "use2-az1"
    tags = {
       Name = "public-subnet"
    }
@@ -38,7 +38,7 @@ resource "aws_subnet" "private_subnet" {
    ]
    vpc_id = aws_vpc.vpc.id
    cidr_block = "192.168.1.0/24"
-   availability_zone_id = "us-east-2a"
+   availability_zone_id = "use2-az1"
    tags = {
       Name = "private-subnet"
    }
