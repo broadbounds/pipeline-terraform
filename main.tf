@@ -175,7 +175,7 @@ resource "tls_private_key" "ssh_key" {
 
 # We upload the public key of our created ssh key to AWS
 resource "aws_key_pair" "public_ssh_key" {
-  key_name   = var.key_name
+  key_name   = var.public_key_name
   public_key = tls_private_key.ssh_key.public_key_openssh
 
    depends_on = [tls_private_key.ssh_key]
