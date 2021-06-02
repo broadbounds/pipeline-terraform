@@ -181,12 +181,18 @@ resource "aws_key_pair" "public_ssh_key" {
    depends_on = [tls_private_key.ssh_key]
 }
 
+# We save our public key at our specified path.
+# Can upload on remote server for ssh encryption
+resource "local_file" "save_public_key" {
+  content = tls_private_key.ssh_key.public_key_openssh 
+  filename = "${var.key_path}${var.public_key_name}.pem"
+}
+
 # We save our private key at our specified path.
 # Allows private key instead of a password to securely access our instances
-resource "local_file" "saveKey" {
+resource "local_file" "save_private_key" {
   content = tls_private_key.ssh_key.private_key_pem
-  filename = "${var.key_path}${var.key_name}.pem"
-  
+  filename = "${var.key_path}${var.private_key_name}.pem"
 }
 
 # We create a bastion host
