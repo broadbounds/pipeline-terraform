@@ -210,7 +210,7 @@ resource "aws_instance" "bastion_host" {
       Name = "bastion host"
    }
    provisioner "file" {
-    source      = "${var.key_path}${var.key_name}.pem"
+    source      = "${var.key_path}${var.private_key_name}.pem"
     destination = "/home/ec2-user/private_ssh_key.pem"
 
     connection {
