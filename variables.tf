@@ -21,3 +21,4 @@ variable "private_key_name" {
 variable "key_path" {
   type        = string
   default     = "/var/lib/jenkins/.ssh/"
+}
